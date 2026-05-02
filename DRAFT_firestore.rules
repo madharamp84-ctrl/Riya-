@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net: Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives (Reusable global helpers)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Blueprints
+    
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) && 
+             data.keys().size() >= 3 &&
+             data.uid is string && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() <= 256;
+    }
+
+    function isValidMemory(data) {
+      return data.keys().hasAll(['userId', 'content', 'createdAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.content is string && data.content.size() <= 5000;
+    }
+
+    function isValidPreference(data) {
+       return data.keys().size() <= 20 &&
+              (!data.has('nickname') || (data.nickname is string && data.nickname.size() <= 100)) &&
+              (!data.has('behavioralStyle') || (data.behavioralStyle is string && data.behavioralStyle.size() <= 100));
+    }
+
+    function isValidReminder(data) {
+      return data.keys().hasAll(['text', 'createdAt', 'status']) &&
+             data.text is string && data.text.size() <= 1000 &&
+             data.status in ['pending', 'completed'];
+    }
+
+    // Domain Rules
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidId(userId) && incoming().uid == userId;
+
+      // User Preferences
+      match /preferences/settings {
+        allow get: if isOwner(userId) && isValidId(userId);
+        allow write: if isOwner(userId) && isValidId(userId) && isValidPreference(incoming());
+      }
+
+      // Personality DNA
+      match /personality/dna {
+        allow get: if isOwner(userId) && isValidId(userId);
+        allow write: if isOwner(userId) && isValidId(userId);
+      }
+
+      // Memories
+      match /memories/{memoryId} {
+        allow list, get: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidMemory(incoming());
+        allow delete: if isOwner(userId) && isValidId(userId);
+      }
+
+      // Chat History
+      match /chatHistory/{chatId} {
+        allow list, get: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && incoming().userId == userId;
+        allow delete: if isOwner(userId) && isValidId(userId);
+      }
+
+      // Reminders
+      match /reminders/{reminderId} {
+        allow list, get: if isOwner(userId) && isValidId(userId);
+        allow create, update: if isOwner(userId) && isValidId(userId) && isValidReminder(incoming());
+        allow delete: if isOwner(userId) && isValidId(userId);
+      }
+    }
+    
+    // Connection test document
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

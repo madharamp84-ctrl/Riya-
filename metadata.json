@@ -1,0 +1,12 @@
+{
+  "name": "Riya Rao",
+  "description": "An advanced AGI-powered emotional companion with multi-agent reasoning, relationship evolution, and long-term memory.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "voice_interaction",
+    "ai_personality"
+  ]
+}

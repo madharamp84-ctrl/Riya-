@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and settings",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastLogin": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "PersonalityDNA": {
+      "title": "Personality DNA",
+      "description": "Stores Riya's evolving personality traits for a specific user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "curiosity": { "type": "number" },
+        "playfulness": { "type": "number" },
+        "caring": { "type": "number" },
+        "romanceLevel": { "type": "number" },
+        "lastInteraction": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId"]
+    },
+    "MemoryFragment": {
+      "title": "Memory Fragment",
+      "description": "A semantic memory fragment for long-term recall",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "content": { "type": "string" },
+        "keywords": { "type": "array", "items": { "type": "string" } },
+        "sentiment": { "type": "string" },
+        "importance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "content"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Chat history entry",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "model"] },
+        "content": { "type": "string" },
+        "rawContent": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "role", "content"]
+    },
+    "UserPreferences": {
+      "title": "User Preferences",
+      "description": "Learned preferences about the user",
+      "type": "object",
+      "properties": {
+        "nickname": { "type": "string" },
+        "favoriteTopics": { "type": "array", "items": { "type": "string" } },
+        "behavioralStyle": { "type": "string", "description": "e.g., 'shy', 'outgoing', 'poetic'" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Reminder": {
+      "title": "Reminder",
+      "description": "A reminder set by Riya",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "time": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text"]
+    },
+    "IntimacyData": {
+      "title": "Intimacy Data",
+      "description": "Relationship evolution data including levels and stages",
+      "type": "object",
+      "properties": {
+        "level": { "type": "number", "minimum": 0, "maximum": 100 },
+        "stage": { "type": "string" },
+        "days": { "type": "number" },
+        "points": { "type": "number" },
+        "lastInteraction": { "type": "string", "format": "date-time" }
+      },
+      "required": ["level", "stage", "points"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile data"
+    },
+    "/users/{userId}/personality/dna": {
+      "schema": "PersonalityDNA",
+      "description": "Evolving personality for this user"
+    },
+    "/users/{userId}/personality/intimacy": {
+      "schema": "IntimacyData",
+      "description": "Relationship evolution tracking"
+    },
+    "/users/{userId}/preferences/settings": {
+      "schema": "UserPreferences",
+      "description": "Tilok's learned preferences and nicknames"
+    },
+    "/users/{userId}/reminders/{reminderId}": {
+      "schema": "Reminder",
+      "description": "Reminders set by Riya Planner Agent"
+    },
+    "/users/{userId}/memories/{memoryId}": {
+      "schema": "MemoryFragment",
+      "description": "Semantic memories"
+    },
+    "/users/{userId}/chatHistory/{chatId}": {
+      "schema": "Conversation",
+      "description": "Recent chat history for sync"
+    }
+  }
+}
